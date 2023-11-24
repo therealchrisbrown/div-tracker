@@ -9,25 +9,26 @@ def add_dividend():
     try:
         stock = yf.Ticker(stock_symbol)
         dividend_data = stock.dividends
-        latest_dividend = dividend_data.tail(1)
 
-        if latest_dividend.empty():
-            print("Keine Dividendendaten verfügbar!")
-            return
+        if not dividend_data.empty():
+            latest_dividend = dividend_data.tail(1)
         
-        amount = float(latest_dividend.iloc[0])
-        date = str(latest_dividend.index[0].date())
+            amount = float(latest_dividend.iloc[0])
+            date = str(latest_dividend.index[0].date())
 
-        try:
-            df = pd.read_sql("SELECT * FROM dividends", conn)
-        except pd.io.sql.DatabaseError:
-            df = pd.DataFrame(columns=["Symbol","Betrag","Datum"])
+            try:
+                df = pd.read_sql("SELECT * FROM dividends", conn)
+            except pd.io.sql.DatabaseError:
+                df = pd.DataFrame(columns=["Symbol","Betrag","Datum"])
 
-        new_row = {"Symbol": stock_symbol, "Betrag": amount, "Datum": date}
-        df = df.append(new_row, ignore_index = True)
+            new_row = {"Symbol": stock_symbol, "Betrag": amount, "Datum": date}
+            df = df.append(new_row, ignore_index = True)
 
-        df.to_sql("dividends", conn, index=False, if_exists="replace")
-        print("Dividende erfolgreich hinzugefügt!")
+            df.to_sql("dividends", conn, index=False, if_exists="replace")
+            print("Dividende erfolgreich hinzugefügt!")
+
+        else:
+            print(f"Keine Dividendeninformationen für {stock_symbol} verfügbar.")
 
     except Exception as e:
         print(f"Fehler beim Abrufen der Dividendeninformation: {e}")
@@ -51,11 +52,11 @@ def main():
 
         choice = input("Wähle eine Option (1/2/3): ")
 
-        if choice == 1:
+        if choice == "1":
             add_dividend()
-        if choice == 2:
+        if choice == "2":
             show_dividends()
-        elif choice == 3:
+        elif choice == "3":
             break
         else:
             print("Ungültige Eingabe. Versuche es bitte erneut!")
